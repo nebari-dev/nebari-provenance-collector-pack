@@ -4,7 +4,11 @@ metadata:
   name: provenance-collector
   namespace: argocd
 spec:
-  project: default
+  # Software packs must run under the `nebari-apps` project. As of NIC v0.10.0
+  # the `default` project is deny-all (empty sourceRepos + resource whitelists),
+  # so an Application on `default` never renders and sits at Unknown/Unknown.
+  # `nebari-apps` permits the file:// gitops source and all resource kinds.
+  project: nebari-apps
   source:
     repoURL: "file://${GITOPS_DIR}"
     targetRevision: HEAD
