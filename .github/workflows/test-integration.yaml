@@ -275,14 +275,18 @@ jobs:
           path: docs/screenshots/
           if-no-files-found: ignore
 
-      - name: Cleanup
-        if: always()
-        run: |
-          k3d cluster delete ${{ steps.sandbox.outputs.cluster-name || 'provenance-test' }}
-
+      # Runs BEFORE Cleanup: the cluster must still exist for these kubectl
+      # calls to return anything. (Previously this ran after Cleanup, so every
+      # command hit a torn-down cluster and captured nothing.)
       - name: Debug info on failure
         if: failure()
         run: |
+          echo "=== Pack Application ==="
+          kubectl get applications -n argocd \
+            -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status' || true
+          kubectl get application/provenance-collector -n argocd \
+            -o jsonpath='{.status.conditions}{"\n"}' || true
+          echo ""
           echo "=== Pods ==="
           kubectl get pods -A
           echo ""
@@ -302,3 +306,8 @@ jobs:
           echo ""
           echo "=== Events ==="
           kubectl get events --sort-by=.lastTimestamp | tail -30
+
+      - name: Cleanup
+        if: always()
+        run: |
+          k3d cluster delete ${{ steps.sandbox.outputs.cluster-name || 'provenance-test' }}
