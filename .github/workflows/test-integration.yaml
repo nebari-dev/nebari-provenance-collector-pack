@@ -27,17 +27,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.ref }}
 
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
 
       - name: Set up Nebari sandbox
         id: sandbox
-        uses: nebari-dev/action-nebari-sandbox@76ffb6ce5dd4141aeccb8c02719c907f0fe9e25e # v2.1.0
+        uses: nebari-dev/action-nebari-sandbox@830ce3792bf96f5f3225acbc9a9f6f39570b7e58 # v2.2.0
         with:
           profile: platform
           cluster-name: provenance-test
@@ -56,7 +56,7 @@ jobs:
       # wait-healthy both default true). It also annotates nebari-root for a
       # refresh internally, so consumers don't need to poll or nudge themselves.
       - name: Register provenance-collector pack
-        uses: nebari-dev/action-nebari-sandbox/add-software-pack@76ffb6ce5dd4141aeccb8c02719c907f0fe9e25e # v2.1.0
+        uses: nebari-dev/action-nebari-sandbox/add-software-pack@830ce3792bf96f5f3225acbc9a9f6f39570b7e58 # v2.2.0
         with:
           gitops-dir: ${{ steps.sandbox.outputs.gitops-dir }}
           app-name: provenance-collector
@@ -165,7 +165,7 @@ jobs:
       # and point the browser tests at Vite. VITE_DEV_NO_AUTH bypasses the
       # browser Keycloak login for CI (the sandbox chart installs with auth off).
       - name: Set up Node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v6.0.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6.0.0
         with:
           node-version-file: frontend/.node-version
           cache: npm
