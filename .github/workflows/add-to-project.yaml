@@ -8,6 +8,11 @@ on:
 
 jobs:
   sync:
+    # Dependabot PRs run against a separate secrets store, so
+    # ADD_TO_PROJECT_PAT is empty and the sync fails on an unauthenticated
+    # `gh api` call. Dependency bumps don't belong on the project board
+    # anyway, so skip them.
+    if: github.actor != 'dependabot[bot]'
     uses: nebari-dev/.github/.github/workflows/sync-project-priority.yaml@main
     with:
       project-id: PVT_kwDOBd3CI84BKoKt

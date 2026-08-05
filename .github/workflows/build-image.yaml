@@ -36,9 +36,15 @@ jobs:
     # Fork PRs can't read QUAY_USERNAME/QUAY_PASSWORD secrets and would fail at
     # the login step. Skip them entirely; the Test/lint workflows still verify
     # the Dockerfile builds via `docker build` in the integration job.
+    #
+    # Dependabot PRs need the same treatment for a different reason: their
+    # branches live in this repo, so the fork check above passes, but GitHub
+    # runs them against a separate Dependabot secrets store, leaving the Quay
+    # secrets empty. Match on the actor instead.
     if: >-
       github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
     permissions:
       contents: read
       packages: write
