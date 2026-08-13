@@ -4,8 +4,9 @@ import { createRoot } from "react-dom/client";
 
 import { applyAppConfig, loadAppConfig } from "@/app/config";
 import { initKeycloak } from "@/auth/keycloak";
+import { ThemeProvider } from "@/hooks/theme-provider";
 import { queryClient } from "@/lib/queryClient";
-import { ThemeProvider } from "@/providers/ThemeProvider";
+import { THEME_STORAGE_KEY } from "@/lib/theme";
 
 import App from "./App.tsx";
 
@@ -62,7 +63,7 @@ try {
 createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <ThemeProvider storageKey={THEME_STORAGE_KEY}>
         <App />
       </ThemeProvider>
     </QueryClientProvider>

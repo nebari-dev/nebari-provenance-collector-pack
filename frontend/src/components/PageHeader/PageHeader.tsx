@@ -52,27 +52,28 @@ export function PageHeader({
         </div>
 
         <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" title="Download the selected report">
-              Export
-              <ChevronDown className="size-3.5" />
-            </Button>
+          <DropdownMenuTrigger
+            variant="outline"
+            title="Download the selected report"
+            // Match the sibling Button size="sm" (the trigger only renders the
+            // default button size).
+            className="h-7 gap-1.5 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3.5"
+          >
+            Export
+            <ChevronDown className="size-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-auto min-w-[140px]">
-            <DropdownMenuItem asChild>
-              <a href={links.csv} download>
-                CSV
-              </a>
+            {/* Base UI render-prop composition: the item's children are
+                rendered inside the anchor, so the links are not empty. */}
+            {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
+            <DropdownMenuItem render={<a href={links.csv} download />}>CSV</DropdownMenuItem>
+            {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
+            <DropdownMenuItem render={<a href={links.markdown} download />}>
+              Markdown
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a href={links.markdown} download>
-                Markdown
-              </a>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a href={links.json} download="provenance-report.json">
-                JSON
-              </a>
+            {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
+            <DropdownMenuItem render={<a href={links.json} download="provenance-report.json" />}>
+              JSON
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
