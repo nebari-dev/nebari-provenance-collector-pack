@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRunScan } from "@/hooks/useRunScan";
@@ -62,20 +63,22 @@ export function PageHeader({
             Export
             <ChevronDown className="size-3.5" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-auto min-w-[140px]">
-            {/* Base UI render-prop composition: the item's children are
-                rendered inside the anchor, so the links are not empty. */}
-            {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
-            <DropdownMenuItem render={<a href={links.csv} download />}>CSV</DropdownMenuItem>
-            {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
-            <DropdownMenuItem render={<a href={links.markdown} download />}>
-              Markdown
-            </DropdownMenuItem>
-            {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
-            <DropdownMenuItem render={<a href={links.json} download="provenance-report.json" />}>
-              JSON
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+          <DropdownMenuPortal>
+            <DropdownMenuContent align="end" className="w-auto min-w-[140px]">
+              {/* Base UI render-prop composition: the item's children are
+                  rendered inside the anchor, so the links are not empty. */}
+              {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
+              <DropdownMenuItem render={<a href={links.csv} download />}>CSV</DropdownMenuItem>
+              {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
+              <DropdownMenuItem render={<a href={links.markdown} download />}>
+                Markdown
+              </DropdownMenuItem>
+              {/* biome-ignore lint/a11y/useAnchorContent: children render inside the anchor via Base UI's render prop */}
+              <DropdownMenuItem render={<a href={links.json} download="provenance-report.json" />}>
+                JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
         </DropdownMenu>
 
         {canRunScan ? (
