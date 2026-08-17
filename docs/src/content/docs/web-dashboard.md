@@ -56,10 +56,21 @@ React mounts (title, favicon, and theme CSS variables) and in the header (logo).
 | `logoUrl` | Header logo (light mode / default). Absolute `http(s)` URL or root-relative path. |
 | `logoUrlDark` | Dark-mode header logo. Falls back to `logoUrl`, then the built-in dark logo. |
 | `faviconUrl` | Favicon URL. |
-| `theme.light` / `theme.dark` | CSS variable overrides per mode. Supported tokens: `primary`, `primaryForeground`, `background`, `foreground`, `secondary`, `secondaryForeground`, `muted`, `mutedForeground`, `accent`, `accentForeground`, `border`, `ring`, `radius`. |
+| `theme.light` / `theme.dark` | CSS variable overrides per mode. Supported tokens: `primary`, `primaryForeground`, `primaryHover`, `background`, `foreground`, `secondary`, `secondaryForeground`, `muted`, `mutedForeground`, `accent`, `accentForeground`, `border`, `ring`, `radius`, `sidebarPrimary`, `sidebarPrimaryForeground`, `sidebarRing`. |
 
 Every field is optional. Any field left empty uses the built-in Nebari default,
 so an unbranded install looks exactly as it does today.
+
+`primaryHover` (the button/badge hover and active shade), `sidebarPrimary`,
+`sidebarPrimaryForeground` and `sidebarRing` are derived from `primary`,
+`primaryForeground` and `ring` in the stylesheet, so setting `primary` is enough
+to rebrand hover and sidebar states as well. Override them explicitly only to
+pin a specific shade.
+
+Token keys are written to CSS as-is — no allow-list is enforced when the chart
+renders `config.json` or when the SPA applies it — so any other theme variable
+the SPA defines can technically be set here. Only the tokens listed above are
+supported.
 
 ### Kubernetes / Helm
 

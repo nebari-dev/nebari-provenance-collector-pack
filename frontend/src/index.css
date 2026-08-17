@@ -12,7 +12,15 @@
    the Nebari brand palette for light and dark modes — treat them as
    upstream-managed and re-pull via `shadcn add @nebari/theme` rather than
    hand-tuning. App-specific status / pill / text-secondary tokens (which the
-   Nebari theme does not ship) are layered on top of each block. */
+   Nebari theme does not ship) are layered on top of each block.
+
+   Exception: the tokens marked "derived from --primary" below are deliberately
+   expressed in terms of --primary / --primary-foreground / --ring instead of the
+   literal Nebari oklch values. Deployers rebrand at runtime by overriding
+   --primary (frontend.branding.theme in the chart -> /config.json -> a <style>
+   block appended to <head>), and a literal would keep painting Nebari magenta
+   on hover / in the sidebar under a non-magenta brand. Keep them derived when
+   re-pulling the theme. */
 
 :root {
   --radius: 0.625rem;
@@ -29,7 +37,12 @@
 
   --primary: oklch(55.06% 0.1886 311.45);
   --primary-foreground: oklch(100% 0 0);
-  --primary-hover: oklch(47.01% 0.1577 311.26);
+  /* derived from --primary: the Nebari light hover step is a ~15% darkening of
+     --primary, so mix towards black instead of hard-coding the shade. Mixed in
+     oklab (not oklch) because black/white are achromatic and would drag the hue
+     during polar interpolation. Renders as #77379a against the default
+     --primary, vs #77399a for the literal it replaces. */
+  --primary-hover: color-mix(in oklab, var(--primary), black 15%);
 
   --secondary: oklch(95.04% 0.0042 236.5);
   --secondary-foreground: oklch(32.95% 0.0209 254.12);
@@ -63,12 +76,13 @@
 
   --sidebar: oklch(97.91% 0 0);
   --sidebar-foreground: oklch(26.94% 0.0037 286.15);
-  --sidebar-primary: oklch(55.06% 0.1886 311.45);
-  --sidebar-primary-foreground: oklch(100% 0 0);
+  /* derived from --primary / --ring (matches nebari-landing's index.css) */
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: oklch(95.04% 0.0042 236.5);
   --sidebar-accent-foreground: oklch(32.95% 0.0209 254.12);
   --sidebar-border: oklch(78.06% 0.0056 286.27);
-  --sidebar-ring: oklch(61.98% 0.2159 311.67);
+  --sidebar-ring: var(--ring);
 
   /* Motion tokens */
   --duration-fast: 100ms;
@@ -118,7 +132,11 @@
 
   --primary: oklch(61.98% 0.2159 311.67);
   --primary-foreground: oklch(0% 0 0);
-  --primary-hover: oklch(69.98% 0.1926 311.48);
+  /* derived from --primary: dark mode lightens on hover instead of darkening.
+     Renders as #bf76e9 against the default --primary, vs #c575f4 for the
+     literal it replaces (dE_ok 0.019, under one JND) — mixing towards white
+     cannot raise chroma the way the hand-picked literal did. */
+  --primary-hover: color-mix(in oklab, var(--primary), white 18%);
 
   --secondary: oklch(40% 0.0269 250.57);
   --secondary-foreground: oklch(95.04% 0.0042 236.5);
@@ -152,12 +170,13 @@
 
   --sidebar: oklch(26.94% 0.0037 286.15);
   --sidebar-foreground: oklch(97.91% 0 0);
-  --sidebar-primary: oklch(61.98% 0.2159 311.67);
-  --sidebar-primary-foreground: oklch(0% 0 0);
+  /* derived from --primary / --ring (matches nebari-landing's index.css) */
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: oklch(40% 0.0269 250.57);
   --sidebar-accent-foreground: oklch(95.04% 0.0042 236.5);
   --sidebar-border: oklch(47.01% 0.0112 285.96);
-  --sidebar-ring: oklch(69.98% 0.1926 311.48);
+  --sidebar-ring: var(--ring);
 
   /* App-specific tokens (not part of the Nebari theme) */
   --body-background: #262628;
