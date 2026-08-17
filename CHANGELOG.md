@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Dashboard branding: overriding `frontend.branding.theme.*.primary` now also
+  rebrands button/badge hover and active states and the sidebar tokens.
+  `--primary-hover`, `--sidebar-primary`, `--sidebar-primary-foreground` and
+  `--sidebar-ring` were hard-coded to the Nebari magenta, so a rebranded
+  dashboard flashed magenta on hover. They are now derived from `--primary`,
+  `--primary-foreground` and `--ring`, and are additionally documented as
+  overridable tokens (`primaryHover`, `sidebarPrimary`,
+  `sidebarPrimaryForeground`, `sidebarRing`).
+
 ## [0.1.1] - 2026-07-21
 
 ### Added

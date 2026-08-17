@@ -88,6 +88,26 @@ describe("applyAppConfig", () => {
     expect(css).toContain("--primary: #4da6ff;");
   });
 
+  it("kebab-cases multi-word tokens such as primaryHover and sidebarPrimary", () => {
+    applyAppConfig(
+      baseConfig({
+        theme: {
+          light: {
+            primaryHover: "#004c99",
+            sidebarPrimary: "#0066cc",
+            sidebarPrimaryForeground: "#ffffff",
+            sidebarRing: "#3399ff",
+          },
+        },
+      }),
+    );
+    const css = document.querySelector("style[data-branding]")?.textContent ?? "";
+    expect(css).toContain("--primary-hover: #004c99;");
+    expect(css).toContain("--sidebar-primary: #0066cc;");
+    expect(css).toContain("--sidebar-primary-foreground: #ffffff;");
+    expect(css).toContain("--sidebar-ring: #3399ff;");
+  });
+
   it("drops unsafe theme token values while keeping safe ones", () => {
     applyAppConfig(
       baseConfig({
