@@ -616,6 +616,38 @@ the dashboard's internal upload endpoint (default), a ConfigMap, or a shared PVC
 configured sink. The UI is served separately: the browser loads the React SPA from the frontend nginx container,
 which reverse-proxies `/api/*` to the dashboard.
 
+## Releasing
+
+A release is cut by **publishing a GitHub Release**, not by pushing a tag. `.github/workflows/release.yaml` triggers on `release: types: [published]`, so a bare `git push --tags` builds nothing — the tag will just sit there.
+
+```bash
+# Tag name is the version with a leading v; the Release creates the tag for you.
+gh release create v0.1.4 --generate-notes
+```
+
+The version is derived as `${GITHUB_REF_NAME#v}`, so `v0.1.4` produces chart version and `appVersion` `0.1.4`. Both are stamped into `chart/Chart.yaml` at package time — the committed values are placeholders, so don't bump them by hand.
+
+Publishing then runs four things:
+
+1. **Lint** — `helm lint chart/`.
+2. **Chart publish** — stamps the version, `helm package`s the chart, and attaches it to the GitHub Release.
+3. **helm-repository sync** — the shared [`sync-chart`](https://github.com/nebari-dev/helm-repository/tree/main/.github/actions/sync-chart) action opens a **pull request** against `nebari-dev/helm-repository`. **The chart is not installable until that PR is merged.** A tagged-but-unmerged version fails to resolve for consumers, and in ArgoCD that surfaces as `Sync: Unknown` with a `ComparisonError` while the app still reports `Healthy` — a silent stall.
+4. **Example stamping** — `examples/*.yaml` are rewritten to the new version and committed back to `main` as `chore: stamp examples to <tag> [skip ci]`.
+
+Images are built by `build-image.yaml`, which also triggers on `release: published` and tags them `{{version}}`, `{{major}}.{{minor}}`, and `latest`.
+
+### Verify the release landed
+
+The GitHub Release is not the finish line — the helm-repository PR is. Confirm the chart is actually installable:
+
+```bash
+curl -s https://nebari-dev.github.io/helm-repository/index.yaml | \
+  yq '.entries.provenance-collector[].version'
+```
+
+> [!IMPORTANT]
+> Both image tags default to the chart's `appVersion`, so consumers pinning a chart version automatically move to the matching images. Air-gapped or platform-constrained clusters that pre-load images by tag must pull the new tags before bumping the chart, or pods fail with `no match for platform in manifest`.
+
 ## Contributing
 
 Contributions are welcome.
