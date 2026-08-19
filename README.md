@@ -625,14 +625,14 @@ A release is cut by **publishing a GitHub Release**, not by pushing a tag. `.git
 gh release create v0.1.4 --generate-notes
 ```
 
-The version is derived as `${GITHUB_REF_NAME#v}`, so `v0.1.4` produces chart version and `appVersion` `0.1.4`. Both are stamped into `chart/Chart.yaml` at package time — the committed values are placeholders, so don't bump them by hand.
+The version is derived as `${GITHUB_REF_NAME#v}`, so `v0.1.4` produces chart version and `appVersion` `0.1.4`. Both are stamped into `chart/Chart.yaml` at package time and then committed back to `main`, so don't bump them by hand — the release is the source of truth, and a manual bump just gets overwritten.
 
 Publishing then runs four things:
 
 1. **Lint** — `helm lint chart/`.
 2. **Chart publish** — stamps the version, `helm package`s the chart, and attaches it to the GitHub Release.
 3. **helm-repository sync** — the shared [`sync-chart`](https://github.com/nebari-dev/helm-repository/tree/main/.github/actions/sync-chart) action opens a **pull request** against `nebari-dev/helm-repository`. **The chart is not installable until that PR is merged.** A tagged-but-unmerged version fails to resolve for consumers, and in ArgoCD that surfaces as `Sync: Unknown` with a `ComparisonError` while the app still reports `Healthy` — a silent stall.
-4. **Example stamping** — `examples/*.yaml` are rewritten to the new version and committed back to `main` as `chore: stamp examples to <tag> [skip ci]`.
+4. **Version stamping** — `chart/Chart.yaml` and `examples/*.yaml` are rewritten to the new version and committed back to `main` as `chore: stamp version to <tag> [skip ci]`. This is cosmetic for consumers (the published chart is already stamped by step 2) but keeps `main` from advertising a stale version.
 
 Images are built by `build-image.yaml`, which also triggers on `release: published` and tags them `{{version}}`, `{{major}}.{{minor}}`, and `latest`.
 
