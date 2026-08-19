@@ -104,6 +104,8 @@ jobs:
   # and examples/*.yaml (so users who copy them aren't pinned to a stale chart
   # revision). Runs after the chart is published; commits the rewritten files
   # back to main with [skip ci] so the bump doesn't trigger another release.
+  # Finally moves the release tag onto the stamp commit, since the tag was cut
+  # before the stamp existed and would otherwise carry the previous version.
   stamp-version:
     name: Stamp release version onto main
     runs-on: ubuntu-latest
@@ -137,6 +139,8 @@ jobs:
           git diff chart/Chart.yaml examples/ || true
 
       - name: Commit and push to main
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
           if git diff --quiet chart/Chart.yaml examples/; then
             echo "Nothing needed updating."
@@ -145,5 +149,19 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add chart/Chart.yaml examples/
-          git commit -m "chore: stamp version to ${{ github.event.release.tag_name }} [skip ci]"
+          git commit -m "chore: stamp version to ${TAG} [skip ci]"
           git push
+          # The release tag was cut from main before this commit existed, so
+          # its tree still carries the previous version. Move it onto the
+          # stamp commit so the tag (and the release's source archives) shows
+          # the released version — but only when the tag is this commit's
+          # direct parent, so the tag can never pick up unrelated commits
+          # that landed on main in the meantime.
+          git fetch origin "refs/tags/${TAG}" --no-tags
+          if [ "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$(git rev-parse HEAD^)" ]; then
+            git tag -f "${TAG}" HEAD
+            git push --force origin "refs/tags/${TAG}"
+            echo "Moved ${TAG} to $(git rev-parse HEAD)."
+          else
+            echo "::warning::main moved past ${TAG} before stamping; leaving the tag where it is."
+          fi
