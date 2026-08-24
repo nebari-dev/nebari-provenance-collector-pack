@@ -73,9 +73,39 @@ jobs:
           chart-source: ./chart
           application-manifest: .github/argo-apps/provenance-collector.yaml
 
+      # add-software-pack's wait-healthy is not enough on its own: ArgoCD
+      # aggregates an Application with zero live resources to Healthy, so it
+      # returns as soon as the Application object exists — here that was 0.3s
+      # after creation, before a single manifest had synced. And `kubectl wait`
+      # exits NotFound immediately on a missing object (its --timeout never
+      # applies), so a condition-wait that runs too early fails in 0s rather
+      # than waiting. Wait for the chart's objects to actually exist first.
+      - name: Wait for the chart's objects to sync
+        run: |
+          for obj in \
+            deployment/provenance-test-provenance-collector-web \
+            cronjob/provenance-test-provenance-collector; do
+            echo "Waiting for ArgoCD to create $obj..."
+            for i in $(seq 1 60); do
+              if kubectl get "$obj" >/dev/null 2>&1; then
+                echo "  $obj exists (attempt $i)"
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                echo "  timed out waiting for $obj"
+                kubectl get application/provenance-collector -n argocd \
+                  -o custom-columns='SYNC:.status.sync.status,HEALTH:.status.health.status'
+                kubectl get all
+                exit 1
+              fi
+              sleep 5
+            done
+          done
+
       - name: Wait for dashboard
         run: |
-          kubectl wait --for=condition=available deployment/provenance-test-provenance-collector-web --timeout=120s
+          kubectl wait --for=condition=available \
+            deployment/provenance-test-provenance-collector-web --timeout=180s
 
       - name: Run provenance collection
         run: |

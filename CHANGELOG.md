@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is now pinned to `v0.13.0` rather than tracking `latest`.
 
 ### Fixed
+- Integration test no longer races ArgoCD's first sync. `add-software-pack`'s
+  `wait-healthy` returns as soon as the Application exists, because ArgoCD
+  aggregates an Application with zero live resources to `Healthy`; the
+  subsequent `kubectl wait` then exited `NotFound` immediately (it does not
+  retry on a missing object, so its `--timeout` never applied). The workflow
+  now waits for the chart's Deployment and CronJob to exist before waiting on
+  their conditions.
 - Integration test no longer fails at sandbox setup with `configuration
   validation failed: repository field is required`. The v2 action's default
   `nic-version: latest` rolled to NIC v0.13.0, which dropped the
