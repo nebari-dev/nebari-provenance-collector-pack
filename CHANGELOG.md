@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Integration test migrated to `action-nebari-sandbox` v3, which provisions the
+  sandbox through NIC's `local` (kind) provider instead of k3d + NIC's
+  `existing` provider. The `profile` input is gone, the image is loaded with
+  `kind load docker-image`, and the explicit `k3d cluster delete` cleanup step
+  was dropped — v3 tears the deployment down in its own post step. `nic-version`
+  is now pinned to `v0.13.0` rather than tracking `latest`.
+
 ### Fixed
+- Integration test no longer fails at sandbox setup with `configuration
+  validation failed: repository field is required`. The v2 action's default
+  `nic-version: latest` rolled to NIC v0.13.0, which dropped the
+  existing-cluster + `file://` GitOps combination v2 depended on.
 - Dashboard branding: overriding `frontend.branding.theme.*.primary` now also
   rebrands button/badge hover and active states and the sidebar tokens.
   `--primary-hover`, `--sidebar-primary`, `--sidebar-primary-foreground` and

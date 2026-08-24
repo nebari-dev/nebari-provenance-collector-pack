@@ -37,9 +37,15 @@ jobs:
 
       - name: Set up Nebari sandbox
         id: sandbox
-        uses: nebari-dev/action-nebari-sandbox@830ce3792bf96f5f3225acbc9a9f6f39570b7e58 # v2.2.0
+        uses: nebari-dev/action-nebari-sandbox@9ac369ebf87ac2ae217504dcbf824c77f70e429a # v3.0.0
         with:
-          profile: platform
+          # Pinned rather than tracking `latest`, so a NIC release cannot turn
+          # this job red without a deliberate bump — which is exactly how v2
+          # broke: `latest` rolled to NIC v0.13.0, which dropped the
+          # existing-cluster + `file://` GitOps combination v2 was built on.
+          # v3 requires NIC >= v0.13.0 (local/kind cluster + local repository
+          # providers). `profile` is gone in v3 — the action is platform-only.
+          nic-version: v0.13.0
           cluster-name: provenance-test
           resource-summary: "true"
 
@@ -49,14 +55,18 @@ jobs:
       - name: Build and load image
         run: |
           docker build --build-arg VERSION=test -t provenance-collector:test .
-          k3d image import provenance-collector:test --cluster provenance-test
+          # v3 provisions the cluster through NIC's `local` provider, which is
+          # kind, not k3d. `kind` is preinstalled on ubuntu-latest; the cluster
+          # name is the action's output (kubectl context is `kind-<name>`).
+          kind load docker-image provenance-collector:test \
+            --name ${{ steps.sandbox.outputs.cluster-name }}
 
       # add-software-pack waits for the Application CR to exist and to reach
       # status.health.status=Healthy by default (wait-for-application and
       # wait-healthy both default true). It also annotates nebari-root for a
       # refresh internally, so consumers don't need to poll or nudge themselves.
       - name: Register provenance-collector pack
-        uses: nebari-dev/action-nebari-sandbox/add-software-pack@830ce3792bf96f5f3225acbc9a9f6f39570b7e58 # v2.2.0
+        uses: nebari-dev/action-nebari-sandbox/add-software-pack@9ac369ebf87ac2ae217504dcbf824c77f70e429a # v3.0.0
         with:
           gitops-dir: ${{ steps.sandbox.outputs.gitops-dir }}
           app-name: provenance-collector
@@ -106,7 +116,7 @@ jobs:
       # another scan, and verify via the dashboard UI that picking each
       # timeline entry actually swaps the images table — not just the stat cards.
       #
-      # We can't use `busybox` as the sentinel — the sandbox's platform profile
+      # We can't use `busybox` as the sentinel — the sandbox's platform stack
       # ships `nebari-landing-webapi`, which uses `busybox:1.36` as a sidecar.
       # That collides with the test's image and the "appeared between scans"
       # check can't distinguish the two reports. `traefik/whoami` is small,
@@ -275,9 +285,10 @@ jobs:
           path: docs/screenshots/
           if-no-files-found: ignore
 
-      # Runs BEFORE Cleanup: the cluster must still exist for these kubectl
-      # calls to return anything. (Previously this ran after Cleanup, so every
-      # command hit a torn-down cluster and captured nothing.)
+      # The cluster must still exist for these kubectl calls to return
+      # anything. v3 destroys the deployment in the action's *post* step, which
+      # runs after every regular step in the job, so this is safe where it sits
+      # — there is no explicit cleanup step left to order against.
       - name: Debug info on failure
         if: failure()
         run: |
@@ -306,8 +317,3 @@ jobs:
           echo ""
           echo "=== Events ==="
           kubectl get events --sort-by=.lastTimestamp | tail -30
-
-      - name: Cleanup
-        if: always()
-        run: |
-          k3d cluster delete ${{ steps.sandbox.outputs.cluster-name || 'provenance-test' }}
